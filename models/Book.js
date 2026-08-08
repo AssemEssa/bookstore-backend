@@ -28,22 +28,6 @@ const bookSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: [
-        'Fiction',
-        'Non-Fiction',
-        'Mystery',
-        'Thriller',
-        'Romance',
-        'Sci-Fi',
-        'Fantasy',
-        'Biography',
-        'History',
-        'Self-Help',
-        'Business',
-        'Technology',
-        'Children',
-        'Young Adult',
-      ],
     },
     isbn: {
       type: String,

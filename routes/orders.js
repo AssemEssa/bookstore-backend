@@ -164,7 +164,7 @@ router.get('/', protect, admin, async (req, res) => {
 // @access  Private/Admin
 router.put('/:id/status', protect, admin, async (req, res) => {
   try {
-    const { orderStatus, paymentStatus } = req.body;
+    const { orderStatus, paymentStatus, cancellationReason } = req.body;
 
     const order = await Order.findById(req.params.id).populate('items.book');
 
@@ -179,7 +179,8 @@ router.put('/:id/status', protect, admin, async (req, res) => {
 
     if (orderStatus) order.orderStatus = orderStatus;
     if (paymentStatus) order.paymentStatus = paymentStatus;
-    
+    if (cancellationReason !== undefined) order.cancellationReason = cancellationReason;
+
     if (orderStatus === 'delivered') {
       order.deliveredAt = Date.now();
     }
@@ -201,6 +202,38 @@ router.put('/:id/status', protect, admin, async (req, res) => {
       success: true,
       data: order,
       message: orderStatus === 'cancelled' ? 'Order cancelled and stock restored' : 'Order status updated',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.delete('/:id', protect, admin, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    if (order.orderStatus !== 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Only cancelled orders can be deleted',
+      });
+    }
+
+    await order.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'Cancelled order deleted successfully',
     });
   } catch (error) {
     res.status(500).json({
